@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f4f7fb">
+  <title>Gestão Escolar</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="Gestão Escolar, início">
+        <span class="brand-mark" aria-hidden="true">GE</span>
+        <span><strong>Gestão Escolar</strong><small>Painel administrativo</small></span>
+      </a>
+
+      <p class="nav-label">MENU PRINCIPAL</p>
+      <nav class="main-nav" aria-label="Seções">
+        <button class="nav-link active" type="button" data-section="alunos" aria-current="page">
+          <span class="nav-icon" aria-hidden="true">01</span> Alunos
+        </button>
+        <button class="nav-link" type="button" data-section="cursos">
+          <span class="nav-icon" aria-hidden="true">02</span> Cursos
+        </button>
+        <button class="nav-link" type="button" data-section="matriculas">
+          <span class="nav-icon" aria-hidden="true">03</span> Matrículas
+        </button>
+      </nav>
+
+      <div class="sidebar-note">
+        <span class="status-dot" aria-hidden="true"></span>
+        <div><strong>API da escola</strong><small>localhost:3000</small></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">ADMINISTRAÇÃO</p>
+          <h1 id="page-title">Alunos</h1>
+        </div>
+        <span class="topbar-badge"><span class="status-dot" aria-hidden="true"></span> Painel de gestão</span>
+      </header>
+
+      <section class="page-section active" id="section-alunos" aria-labelledby="page-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">CADASTRO E CONSULTA</p><h2>Alunos</h2><p class="section-description">Gerencie os alunos cadastrados na escola.</p></div>
+          <button class="button button-secondary refresh-button" type="button" data-refresh="alunos"><span aria-hidden="true">↻</span> Atualizar</button>
+        </div>
+        <div class="content-grid">
+          <article class="card form-card">
+            <div class="card-heading"><div class="card-icon purple" aria-hidden="true">＋</div><div><h3>Novo aluno</h3><p>Preencha os dados para cadastrar.</p></div></div>
+            <form id="aluno-form">
+              <label for="aluno-nome">Nome completo</label>
+              <input id="aluno-nome" name="nome" type="text" placeholder="Ex.: Ana Silva" maxlength="100" autocomplete="name" required>
+              <label for="aluno-email">E-mail</label>
+              <input id="aluno-email" name="email" type="email" placeholder="ana@email.com" maxlength="100" autocomplete="email" required>
+              <button class="button button-primary form-submit" type="submit">Cadastrar aluno <span aria-hidden="true">→</span></button>
+            </form>
+          </article>
+          <article class="card table-card">
+            <div class="card-heading table-heading"><div><h3>Alunos cadastrados</h3><p>Lista de alunos disponíveis para matrícula.</p></div><span class="count-badge" id="alunos-count">—</span></div>
+            <div class="table-wrap">
+              <table><thead><tr><th>ALUNO</th><th>E-MAIL</th><th class="id-column">ID</th></tr></thead><tbody id="alunos-table"><tr><td colspan="3" class="table-message">Carregando alunos…</td></tr></tbody></table>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="page-section" id="section-cursos" aria-labelledby="page-title" hidden>
+        <div class="section-heading">
+          <div><p class="eyebrow">CATÁLOGO ACADÊMICO</p><h2>Cursos</h2><p class="section-description">Consulte os cursos e acompanhe as vagas disponíveis.</p></div>
+          <button class="button button-secondary refresh-button" type="button" data-refresh="cursos"><span aria-hidden="true">↻</span> Atualizar</button>
+        </div>
+        <div class="content-grid">
+          <article class="card form-card">
+            <div class="card-heading"><div class="card-icon blue" aria-hidden="true">＋</div><div><h3>Novo curso</h3><p>Cadastre um curso e defina as vagas.</p></div></div>
+            <form id="curso-form">
+              <label for="curso-nome">Nome do curso</label>
+              <input id="curso-nome" name="nome" type="text" placeholder="Ex.: Banco de Dados SQL" maxlength="100" required>
+              <label for="curso-vagas">Quantidade de vagas</label>
+              <input id="curso-vagas" name="vagas" type="number" min="0" step="1" placeholder="Ex.: 20" required>
+              <button class="button button-primary form-submit" type="submit">Cadastrar curso <span aria-hidden="true">→</span></button>
+            </form>
+          </article>
+          <article class="card table-card">
+            <div class="card-heading table-heading"><div><h3>Cursos disponíveis</h3><p>Os cursos sem vagas aparecem destacados.</p></div><span class="count-badge" id="cursos-count">—</span></div>
+            <div class="table-wrap">
+              <table><thead><tr><th>CURSO</th><th>VAGAS</th><th class="id-column">ID</th></tr></thead><tbody id="cursos-table"><tr><td colspan="3" class="table-message">Carregando cursos…</td></tr></tbody></table>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="page-section" id="section-matriculas" aria-labelledby="page-title" hidden>
+        <div class="section-heading">
+          <div><p class="eyebrow">VÍNCULO ACADÊMICO</p><h2>Matrículas</h2><p class="section-description">Matricule alunos e consulte os vínculos existentes.</p></div>
+          <button class="button button-secondary refresh-button" type="button" data-refresh="matriculas"><span aria-hidden="true">↻</span> Atualizar</button>
+        </div>
+        <div class="content-grid">
+          <article class="card form-card">
+            <div class="card-heading"><div class="card-icon green" aria-hidden="true">＋</div><div><h3>Nova matrícula</h3><p>Selecione o aluno e o curso.</p></div></div>
+            <form id="matricula-form">
+              <label for="matricula-aluno">Aluno</label>
+              <select id="matricula-aluno" name="aluno_id" required><option value="">Carregando alunos…</option></select>
+              <label for="matricula-curso">Curso</label>
+              <select id="matricula-curso" name="curso_id" required><option value="">Carregando cursos…</option></select>
+              <button class="button button-primary form-submit" type="submit">Realizar matrícula <span aria-hidden="true">→</span></button>
+            </form>
+          </article>
+          <article class="card table-card">
+            <div class="card-heading table-heading"><div><h3>Matrículas realizadas</h3><p>Aluno, curso e data de cada matrícula.</p></div><span class="count-badge" id="matriculas-count">—</span></div>
+            <div class="table-wrap">
+              <table><thead><tr><th>ALUNO</th><th>CURSO</th><th>DATA</th></tr></thead><tbody id="matriculas-table"><tr><td colspan="3" class="table-message">Carregando matrículas…</td></tr></tbody></table>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <footer class="footer">Gestão Escolar <span>·</span> Painel de administração</footer>
+    </main>
+  </div>
+  <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
