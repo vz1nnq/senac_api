@@ -24,9 +24,16 @@ const listarTurmasByID = async(req, res) => {
         };
 
         const resultado = await TurmasRepository.getTurmaByID(id);
+        
+        if (resultado.rowCount === 0) {
+            return res.status(404).json({
+                mensagem:"Turma não encontrada"
+            })
+        }
+
         return res.status(200).json(resultado);
     }catch (error) {
-        console.error(error.messsage);
+        console.error(error.message);
         res.status(500).json({
             mensagem:"Erro interno"
         });
@@ -63,11 +70,73 @@ const mastricularAluno = async(req, res) => {
 
         return res.status(201).json(resultado)
     }catch (error) {
-        console.error(error.messsage);
+        console.error(error.message);
         res.status(500).json({
             mensagem:"Erro interno"
         });
     };
 };
 
-module.exports = {listaTurmas, listarTurmasByID, mastricularAluno};
+const atualizarTurmas = async(req, res) => {
+    try{
+        const id = req.params.id
+
+        if (isNaN(id) || id <= 0) {
+            return res.status(400).json({
+                mensagem: "Insira um ID valido."
+            });
+        };
+
+        const {aluno_id, curso_id} = req.body;
+
+        if (!aluno_id || !curso_id) {
+            return res.status(400).json({
+                mensagem:"Todos os campos devem ser preenchidos."
+            });
+        };
+
+        const resultado = await TurmasRepository.atualizarTurmas(id, aluno_id, curso_id);
+
+        if (resultado.rowCount === 0) {
+            return res.status(404).json({
+                mensagem:"Turma não encontrado"
+            });
+        };
+
+        res.status(200).json(resultado);
+    }catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            mensagem:"Erro interno"
+        });
+    };
+};
+
+const deletarTurmas = async(req, res) => {
+    try{
+        const id = req.params.id;
+
+        if (isNaN(id) || id <= 0) {
+            return res.status(400).json({
+                mensagem: "Insira um ID valido."
+            });
+        };
+
+        const resultado = await TurmasRepository.deletarTurmas(id);
+
+        if (resultado === 0) {
+            return res.status(404).json({
+                mensagem:"Turma não encontrado"
+            });
+        };
+
+        res.status(200).json(resultado);
+    }catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            mensagem:"Erro interno"
+        });
+    };
+};
+
+module.exports = {listaTurmas, listarTurmasByID, mastricularAluno, atualizarTurmas, deletarTurmas};
