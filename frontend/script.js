@@ -3,7 +3,12 @@ const API_URL = "http://localhost:3000";
 const state = {
   alunos: [],
   cursos: [],
-  matriculas: []
+  matriculas: [],
+  editing: {
+    alunos: null,
+    cursos: null,
+    matriculas: null
+  }
 };
 
 const pageTitles = {
@@ -22,7 +27,10 @@ const elements = {
   cursosCount: document.getElementById("cursos-count"),
   matriculasCount: document.getElementById("matriculas-count"),
   alunoSelect: document.getElementById("matricula-aluno"),
-  cursoSelect: document.getElementById("matricula-curso")
+  cursoSelect: document.getElementById("matricula-curso"),
+  alunoForm: document.getElementById("aluno-form"),
+  cursoForm: document.getElementById("curso-form"),
+  matriculaForm: document.getElementById("matricula-form")
 };
 
 function showToast(message, type = "success") {
@@ -93,10 +101,30 @@ function addCell(row, value, className = "") {
   return cell;
 }
 
+function addActions(row, type, id) {
+  const cell = document.createElement("td");
+  const actions = document.createElement("div");
+  actions.className = "row-actions";
+
+  for (const [action, label] of [["edit", "Editar"], ["delete", "Excluir"]]) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `row-action${action === "delete" ? " danger" : ""}`;
+    button.dataset.action = action;
+    button.dataset.type = type;
+    button.dataset.id = id;
+    button.textContent = label;
+    actions.append(button);
+  }
+
+  cell.append(actions);
+  row.append(cell);
+}
+
 function renderAlunos() {
   elements.alunosCount.textContent = state.alunos.length;
   if (!state.alunos.length) {
-    setTableMessage(elements.alunosTable, 3, "Nenhum aluno cadastrado.");
+    setTableMessage(elements.alunosTable, 4, "Nenhum aluno cadastrado.");
     return;
   }
 
@@ -105,6 +133,7 @@ function renderAlunos() {
     addCell(row, aluno.nome);
     addCell(row, aluno.email);
     addCell(row, aluno.id, "id-column");
+    addActions(row, "alunos", aluno.id);
     return row;
   });
   elements.alunosTable.replaceChildren(...rows);
@@ -113,7 +142,7 @@ function renderAlunos() {
 function renderCursos() {
   elements.cursosCount.textContent = state.cursos.length;
   if (!state.cursos.length) {
-    setTableMessage(elements.cursosTable, 3, "Nenhum curso cadastrado.");
+    setTableMessage(elements.cursosTable, 4, "Nenhum curso cadastrado.");
     return;
   }
 
@@ -128,6 +157,7 @@ function renderCursos() {
     vacancies.append(badge);
     row.append(vacancies);
     addCell(row, curso.id, "id-column");
+    addActions(row, "cursos", curso.id);
     return row;
   });
   elements.cursosTable.replaceChildren(...rows);
@@ -144,7 +174,7 @@ function formatDate(value) {
 function renderMatriculas() {
   elements.matriculasCount.textContent = state.matriculas.length;
   if (!state.matriculas.length) {
-    setTableMessage(elements.matriculasTable, 3, "Nenhuma matrícula encontrada.");
+    setTableMessage(elements.matriculasTable, 5, "Nenhuma matrícula encontrada.");
     return;
   }
 
@@ -153,12 +183,14 @@ function renderMatriculas() {
     addCell(row, matricula.aluno || matricula.aluno_nome || matricula.nome_aluno);
     addCell(row, matricula.curso || matricula.curso_nome || matricula.nome_curso);
     addCell(row, formatDate(matricula.data_matricula || matricula.data));
+    addCell(row, matricula.id, "id-column");
+    addActions(row, "matriculas", matricula.id);
     return row;
   });
   elements.matriculasTable.replaceChildren(...rows);
 }
 
-function updateSelect(select, entries, label, emptyLabel, disableWhenFull = false) {
+function updateSelect(select, entries, label, emptyLabel, disableWhenFull = false, allowFullId = null) {
   const previousValue = select.value;
   const placeholder = document.createElement("option");
   placeholder.value = "";
@@ -167,7 +199,7 @@ function updateSelect(select, entries, label, emptyLabel, disableWhenFull = fals
     const option = document.createElement("option");
     option.value = entry.id;
     option.textContent = label(entry);
-    if (disableWhenFull && Number(entry.vagas) <= 0) {
+    if (disableWhenFull && Number(entry.vagas) <= 0 && String(entry.id) !== String(allowFullId)) {
       option.disabled = true;
       option.textContent += " (lotado)";
     }
@@ -177,7 +209,9 @@ function updateSelect(select, entries, label, emptyLabel, disableWhenFull = fals
   if (entries.some((entry) => String(entry.id) === previousValue)) {
     select.value = previousValue;
   }
-  select.disabled = entries.length === 0 || (disableWhenFull && entries.every((entry) => Number(entry.vagas) <= 0));
+  select.disabled = entries.length === 0 || (disableWhenFull && entries.every(
+    (entry) => Number(entry.vagas) <= 0 && String(entry.id) !== String(allowFullId)
+  ));
 }
 
 function updateMatriculaSelects() {
@@ -187,59 +221,173 @@ function updateMatriculaSelects() {
     state.cursos,
     (curso) => `${curso.nome} — ${curso.vagas} ${Number(curso.vagas) === 1 ? "vaga" : "vagas"}`,
     "Selecione um curso",
-    true
+    true,
+    state.editing.matriculas?.curso_id
   );
 }
 
 async function loadAlunos() {
-  setLoading(elements.alunosTable, 3);
+  setLoading(elements.alunosTable, 4);
   try {
     const data = await request("/alunos");
     state.alunos = Array.isArray(data) ? data : [];
     renderAlunos();
     updateMatriculaSelects();
   } catch (error) {
-    setTableMessage(elements.alunosTable, 3, "Não foi possível carregar os alunos.");
+    setTableMessage(elements.alunosTable, 4, "Não foi possível carregar os alunos.");
     showToast(error.message, "error");
   }
 }
 
 async function loadCursos() {
-  setLoading(elements.cursosTable, 3);
+  setLoading(elements.cursosTable, 4);
   try {
     const data = await request("/cursos");
     state.cursos = Array.isArray(data) ? data : [];
     renderCursos();
     updateMatriculaSelects();
   } catch (error) {
-    setTableMessage(elements.cursosTable, 3, "Não foi possível carregar os cursos.");
+    setTableMessage(elements.cursosTable, 4, "Não foi possível carregar os cursos.");
     showToast(error.message, "error");
   }
 }
 
 async function loadMatriculas() {
-  setLoading(elements.matriculasTable, 3);
+  setLoading(elements.matriculasTable, 5);
   try {
     const data = await request("/turmas");
     state.matriculas = Array.isArray(data) ? data : [];
     renderMatriculas();
   } catch (error) {
-    setTableMessage(elements.matriculasTable, 3, "Não foi possível carregar as matrículas.");
+    setTableMessage(elements.matriculasTable, 5, "Não foi possível carregar as matrículas.");
     showToast(error.message, "error");
   }
 }
 
-async function submitForm(form, path, getPayload, successMessage, reload) {
+const formSettings = {
+  alunos: {
+    form: elements.alunoForm,
+    title: document.getElementById("aluno-form-title"),
+    description: document.getElementById("aluno-form-description"),
+    createTitle: "Novo aluno",
+    editTitle: "Editar aluno",
+    createDescription: "Preencha os dados para cadastrar.",
+    editDescription: "Atualize os dados do aluno selecionado.",
+    createLabel: "Cadastrar aluno",
+    editLabel: "Salvar alterações",
+    collection: "/alunos",
+    payload: (data) => ({
+      nome: data.get("nome").trim(),
+      email: data.get("email").trim()
+    }),
+    reload: () => Promise.all([loadAlunos(), loadMatriculas()])
+  },
+  cursos: {
+    form: elements.cursoForm,
+    title: document.getElementById("curso-form-title"),
+    description: document.getElementById("curso-form-description"),
+    createTitle: "Novo curso",
+    editTitle: "Editar curso",
+    createDescription: "Cadastre um curso e defina as vagas.",
+    editDescription: "Atualize os dados do curso selecionado.",
+    createLabel: "Cadastrar curso",
+    editLabel: "Salvar alterações",
+    collection: "/cursos",
+    payload: (data) => ({
+      nome: data.get("nome").trim(),
+      vagas: Number(data.get("vagas"))
+    }),
+    reload: () => Promise.all([loadCursos(), loadMatriculas()])
+  },
+  matriculas: {
+    form: elements.matriculaForm,
+    title: document.getElementById("matricula-form-title"),
+    description: document.getElementById("matricula-form-description"),
+    createTitle: "Nova matrícula",
+    editTitle: "Editar matrícula",
+    createDescription: "Selecione o aluno e o curso.",
+    editDescription: "Altere o aluno ou curso desta matrícula.",
+    createLabel: "Realizar matrícula",
+    editLabel: "Salvar alterações",
+    collection: "/turmas",
+    payload: (data) => ({
+      aluno_id: Number(data.get("aluno_id")),
+      curso_id: Number(data.get("curso_id"))
+    }),
+    reload: () => Promise.all([loadMatriculas(), loadCursos()])
+  }
+};
+
+function setFormMode(type, entity = null) {
+  const settings = formSettings[type];
+  const form = settings.form;
+  state.editing[type] = entity;
+  settings.title.textContent = entity ? settings.editTitle : settings.createTitle;
+  settings.description.textContent = entity ? settings.editDescription : settings.createDescription;
+  form.querySelector(".submit-label").textContent = entity ? settings.editLabel : settings.createLabel;
+  form.querySelector(".cancel-edit").hidden = !entity;
+  if (!entity) {
+    form.reset();
+    if (type === "matriculas") updateMatriculaSelects();
+    return;
+  }
+
+  for (const [name, value] of Object.entries(entity)) {
+    const field = form.elements.namedItem(name);
+    if (field) field.value = value;
+  }
+  if (type === "matriculas") updateMatriculaSelects();
+}
+
+async function handleFormSubmit(type, event) {
+  event.preventDefault();
+  const settings = formSettings[type];
+  const form = settings.form;
   const button = form.querySelector('button[type="submit"]');
+  const entity = state.editing[type];
   button.disabled = true;
   try {
-    await request(path, {
-      method: "POST",
-      body: JSON.stringify(getPayload(new FormData(form)))
+    await request(entity ? `${settings.collection}/${entity.id}` : settings.collection, {
+      method: entity ? "PUT" : "POST",
+      body: JSON.stringify(settings.payload(new FormData(form)))
     });
-    form.reset();
-    showToast(successMessage);
-    await reload();
+    setFormMode(type);
+    showToast(entity ? "Alterações salvas com sucesso." : "Cadastro realizado com sucesso.");
+    await settings.reload();
+  } catch (error) {
+    showToast(error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function handleTableAction(event) {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+
+  const { action, type, id } = button.dataset;
+  const collection = `/${type === "matriculas" ? "turmas" : type}`;
+  const entity = state[type].find((item) => String(item.id) === String(id));
+  if (!entity) {
+    showToast("O registro selecionado não está mais disponível. Atualize a lista.", "error");
+    return;
+  }
+
+  if (action === "edit") {
+    setFormMode(type, entity);
+    formSettings[type].form.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  const entityName = type === "alunos" ? "este aluno" : type === "cursos" ? "este curso" : "esta matrícula";
+  if (!window.confirm(`Deseja realmente excluir ${entityName}? Essa ação não pode ser desfeita.`)) return;
+
+  button.disabled = true;
+  try {
+    await request(`${collection}/${id}`, { method: "DELETE" });
+    if (String(state.editing[type]?.id) === String(id)) setFormMode(type);
+    showToast("Registro excluído com sucesso.");
+    await formSettings[type].reload();
   } catch (error) {
     showToast(error.message, "error");
   } finally {
@@ -275,37 +423,13 @@ document.querySelectorAll(".refresh-button").forEach((button) => {
   });
 });
 
-document.getElementById("aluno-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const form = event.currentTarget;
-  submitForm(form, "/alunos", (data) => ({
-    nome: data.get("nome").trim(),
-    email: data.get("email").trim()
-  }), "Aluno cadastrado com sucesso.", async () => {
-    await loadAlunos();
-  });
-});
+for (const [type, settings] of Object.entries(formSettings)) {
+  settings.form.addEventListener("submit", (event) => handleFormSubmit(type, event));
+  settings.form.querySelector(".cancel-edit").addEventListener("click", () => setFormMode(type));
+}
 
-document.getElementById("curso-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const form = event.currentTarget;
-  submitForm(form, "/cursos", (data) => ({
-    nome: data.get("nome").trim(),
-    vagas: Number(data.get("vagas"))
-  }), "Curso cadastrado com sucesso.", async () => {
-    await loadCursos();
-  });
-});
-
-document.getElementById("matricula-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const form = event.currentTarget;
-  submitForm(form, "/turmas", (data) => ({
-    aluno_id: Number(data.get("aluno_id")),
-    curso_id: Number(data.get("curso_id"))
-  }), "Matrícula realizada com sucesso.", async () => {
-    await Promise.all([loadMatriculas(), loadCursos()]);
-  });
-});
+elements.alunosTable.addEventListener("click", handleTableAction);
+elements.cursosTable.addEventListener("click", handleTableAction);
+elements.matriculasTable.addEventListener("click", handleTableAction);
 
 Promise.all([loadAlunos(), loadCursos(), loadMatriculas()]);
