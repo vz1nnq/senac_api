@@ -21,8 +21,8 @@ const getTurmaByID = async(id) => {
     const sql = `
         SELECT 
             turmas.id,
-            aluno.nome AS aluno,
-            curso.nome As curso,
+            alunos.nome AS aluno,
+            cursos.nome As curso,
             turmas.data_matricula
         FROM turmas
         INNER JOIN alunos ON turmas.aluno_id = alunos.id

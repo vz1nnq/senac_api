@@ -4,7 +4,7 @@ const cursosRepository = require('../repositories/cursosRepository');
 const listaTurmas = async(req, res) => {
     try{
         const resultado = await TurmasRepository.getAllTurmas();
-        return res.status(201).json(resultado);
+        return res.status(200).json(resultado);
     }catch (error) {
         console.error(error.messsage);
         res.status(500).json({
@@ -15,7 +15,7 @@ const listaTurmas = async(req, res) => {
 
 const listarTurmasByID = async(req, res) => {
     try{
-        const id = id.params.id;
+        const id = req.params.id;
 
         if (isNaN(id) || id <= 0) {
             return res.status(400).json({
@@ -24,7 +24,7 @@ const listarTurmasByID = async(req, res) => {
         };
 
         const resultado = await TurmasRepository.getTurmaByID(id);
-        return res.status(201).json(resultado);
+        return res.status(200).json(resultado);
     }catch (error) {
         console.error(error.messsage);
         res.status(500).json({

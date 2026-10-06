@@ -3,7 +3,7 @@ const AlunosRepository = require('../repositories/alunosRepository');
 const listarAlunos = async(req, res) => {
     try {
         const resultado = await AlunosRepository.getAllAlunos();
-        return res.status(201).json(resultado);
+        return res.status(200).json(resultado);
     } catch (error) {
         console.error(error.messsage);
         res.status(500).json({
@@ -22,7 +22,7 @@ const criarAlunos = async(req, res) => {
             });
         };
 
-        const resultado = await AlunosRepository.getAllAlunos();
+        const resultado = await AlunosRepository.criarAlunos(nome, email);
         return res.status(201).json(resultado)
     } catch (error) {
         console.error(error.messsage);

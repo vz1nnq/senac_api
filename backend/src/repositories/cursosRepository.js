@@ -24,7 +24,7 @@ const criarCurso = async(nome, vagas) => {
 };
 
 const decrementarVaga = async(id) => {
-    const sql = `UPDATE cursos SET vagas = - 1 WHERE id = $1 AND vagas > 0 RETURNING *`;
+    const sql = `UPDATE cursos SET vagas = vagas - 1 WHERE id = $1 AND vagas > 0 RETURNING *`;
     const valores = [id];
 
     const resultado = await pool.query(sql, valores);
