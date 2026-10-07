@@ -6,7 +6,7 @@ const listarCursos = async(req, res) => {
         return res.status(200).json(resultado);
     }catch (error) {
         console.error(error.message);
-        res.status(500).json({
+        return res.status(500).json({
             mensagem:"Erro interno"
         });
     };
@@ -33,7 +33,7 @@ const listarCursoByID = async(req, res) => {
         return res.status(200).json(resultado);
     }catch (error) {
         console.error(error.message);
-        res.status(500).json({
+        return res.status(500).json({
             mensagem:"Erro interno"
         });
     };
@@ -59,7 +59,7 @@ const criarCurso = async(req, res) => {
         return res.status(201).json(resultado);
     }catch (error) {
         console.error(error.message);
-        res.status(500).json({
+        return res.status(500).json({
             mensagem:"Erro interno"
         });
     };
@@ -94,7 +94,7 @@ const atualizarCursos = async(req, res) => {
         res.status(200).json(resultado);
     }catch (error) {
         console.error(error.message);
-        res.status(500).json({
+        return res.status(500).json({
             mensagem:"Erro interno"
         });
     };
@@ -121,7 +121,7 @@ const deletarCurso = async(req, res) => {
         res.status(200).json(resultado);
     }catch (error) {
         console.error(error.message);
-        res.status(500).json({
+        return res.status(500).json({
             mensagem:"Erro interno"
         });
     };

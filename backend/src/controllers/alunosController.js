@@ -4,9 +4,9 @@ const listarAlunos = async(req, res) => {
     try {
         const resultado = await AlunosRepository.getAllAlunos();
         return res.status(200).json(resultado);
-    } catch (error) {
+    }catch (error) {
         console.error(error.message);
-        res.status(500).json({
+        return res.status(500).json({
             mensagem:"Erro interno"
         });
     };
@@ -33,7 +33,7 @@ const listarAlunosByID = async(req, res) => {
         res.status(200).json(resultado);
     }catch (error) {
         console.error(error.message);
-        res.status(500).json({
+        return res.status(500).json({
             mensagem:"Erro interno"
         });
     };
@@ -51,9 +51,9 @@ const criarAlunos = async(req, res) => {
 
         const resultado = await AlunosRepository.criarAlunos(nome, email);
         return res.status(201).json(resultado)
-    } catch (error) {
+    }catch (error) {
         console.error(error.message);
-        res.status(500).json({
+        return res.status(500).json({
             mensagem:"Erro interno"
         });
     };
@@ -88,7 +88,7 @@ const atualizarAlunos = async(req, res) => {
         res.status(200).json(resultado);
     }catch (error) {
         console.error(error.message);
-        res.status(500).json({
+        return res.status(500).json({
             mensagem:"Erro interno"
         });
     };
@@ -115,7 +115,7 @@ const deletarAluno = async(req, res) => {
         res.status(200).json(resultado);
     }catch (error) {
         console.error(error.message);
-        res.status(500).json({
+        return res.status(500).json({
             mensagem:"Erro interno"
         });
     };

@@ -45,5 +45,12 @@ const decrementarVaga = async(id) => {
     return resultado;
 };
 
+const incrementarVaga = async(id) => {
+    const sql = `UPDATE cursos SET vagas = vagas + 1 WHERE id = $1 RETURNING *`
+    const resultado = await pool.query(sql, [id]);
 
-module.exports = {getAllCursos, getCursoByID, criarCurso, atualizarCursos, deletarCurso, decrementarVaga};
+    return resultado;
+};
+
+
+module.exports = {getAllCursos, getCursoByID, criarCurso, atualizarCursos, deletarCurso, decrementarVaga, incrementarVaga};
