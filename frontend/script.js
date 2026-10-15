@@ -1,9 +1,12 @@
-const API_URL = "http://localhost:3000";
+const API_URL = `${window.location.protocol === "file:" ? "http:" : window.location.protocol}//${window.location.hostname || "localhost"}:3000`;
+const TOKEN_KEY = "gestao-escolar-token";
+const USER_KEY = "gestao-escolar-user";
 
 const state = {
   alunos: [],
   cursos: [],
   matriculas: [],
+  token: localStorage.getItem(TOKEN_KEY),
   editing: {
     alunos: null,
     cursos: null,
@@ -18,6 +21,13 @@ const pageTitles = {
 };
 
 const elements = {
+  authScreen: document.getElementById("auth-screen"),
+  appShell: document.getElementById("app-shell"),
+  loginForm: document.getElementById("login-form"),
+  forgotForm: document.getElementById("forgot-form"),
+  loginFeedback: document.getElementById("login-feedback"),
+  forgotFeedback: document.getElementById("forgot-feedback"),
+  currentUser: document.getElementById("current-user"),
   title: document.getElementById("page-title"),
   toastRegion: document.getElementById("toast-region"),
   alunosTable: document.getElementById("alunos-table"),
@@ -50,6 +60,45 @@ function showToast(message, type = "success") {
   window.setTimeout(() => toast.remove(), 4500);
 }
 
+function setFeedback(element, message = "", type = "") {
+  element.textContent = message;
+  element.classList.toggle("error", type === "error");
+  element.classList.toggle("success", type === "success");
+}
+
+function showAuth(view = "login") {
+  elements.authScreen.hidden = false;
+  elements.appShell.hidden = true;
+  document.getElementById("login-view").hidden = view !== "login";
+  document.getElementById("forgot-view").hidden = view !== "forgot";
+  if (view === "login") document.getElementById("login-email").focus();
+  else document.getElementById("forgot-email").focus();
+}
+
+function showDashboard(user) {
+  elements.authScreen.hidden = true;
+  elements.appShell.hidden = false;
+  elements.currentUser.textContent = user?.nome || user?.email || "Painel de gestão";
+}
+
+function clearSession() {
+  state.token = null;
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem("gestao-escolar-theme", theme);
+  document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+    const isDark = theme === "dark";
+    button.setAttribute("aria-pressed", String(isDark));
+    button.setAttribute("aria-label", isDark ? "Ativar modo claro" : "Ativar modo escuro");
+    button.querySelector("[aria-hidden]").textContent = isDark ? "☀" : "☾";
+    button.querySelector(".theme-label").textContent = isDark ? "Modo claro" : "Modo escuro";
+  });
+}
+
 async function request(path, options = {}) {
   let response;
   try {
@@ -57,6 +106,7 @@ async function request(path, options = {}) {
       ...options,
       headers: {
         ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(state.token ? { Authorization: `Bearer ${state.token}` } : {}),
         ...options.headers
       }
     });
@@ -70,6 +120,11 @@ async function request(path, options = {}) {
     : await response.text();
 
   if (!response.ok) {
+    if (response.status === 401 && state.token) {
+      clearSession();
+      showAuth();
+      setFeedback(elements.loginFeedback, "Sua sessão expirou. Entre novamente para continuar.", "error");
+    }
     const message = typeof data === "string"
       ? data
       : data.mensagem || data.message || "Ocorreu um erro ao processar a solicitação.";
@@ -432,4 +487,89 @@ elements.alunosTable.addEventListener("click", handleTableAction);
 elements.cursosTable.addEventListener("click", handleTableAction);
 elements.matriculasTable.addEventListener("click", handleTableAction);
 
-Promise.all([loadAlunos(), loadCursos(), loadMatriculas()]);
+elements.loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = elements.loginForm.querySelector('[type="submit"]');
+  const formData = new FormData(elements.loginForm);
+  button.disabled = true;
+  setFeedback(elements.loginFeedback);
+  try {
+    const result = await request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: formData.get("email").trim(),
+        senha: formData.get("senha")
+      })
+    });
+    if (!result.token) throw new Error("A API não retornou um token de acesso.");
+    state.token = result.token;
+    localStorage.setItem(TOKEN_KEY, result.token);
+    localStorage.setItem(USER_KEY, JSON.stringify(result.usuario || {}));
+    showDashboard(result.usuario);
+    elements.loginForm.reset();
+    await Promise.all([loadAlunos(), loadCursos(), loadMatriculas()]);
+  } catch (error) {
+    setFeedback(elements.loginFeedback, error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+elements.forgotForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = elements.forgotForm.querySelector('[type="submit"]');
+  const email = new FormData(elements.forgotForm).get("email").trim();
+  button.disabled = true;
+  setFeedback(elements.forgotFeedback);
+  try {
+    const result = await request("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email })
+    });
+    setFeedback(elements.forgotFeedback, result.mensagem || "Se o e-mail existir, você receberá um link de recuperação.", "success");
+    elements.forgotForm.reset();
+  } catch (error) {
+    setFeedback(elements.forgotFeedback, error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.querySelectorAll("[data-show-forgot]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const loginEmail = document.getElementById("login-email").value.trim();
+    document.getElementById("forgot-email").value = loginEmail;
+    setFeedback(elements.forgotFeedback);
+    showAuth("forgot");
+  });
+});
+document.querySelectorAll("[data-show-login]").forEach((button) => {
+  button.addEventListener("click", () => showAuth());
+});
+document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+  button.addEventListener("click", () => {
+    applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+  });
+});
+document.getElementById("logout-button").addEventListener("click", () => {
+  clearSession();
+  showAuth();
+  setFeedback(elements.loginFeedback, "Você saiu da sua conta.", "success");
+});
+
+document.getElementById("current-year").textContent = new Date().getFullYear();
+const savedTheme = localStorage.getItem("gestao-escolar-theme");
+applyTheme(savedTheme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+
+if (state.token) {
+  let user = {};
+  try {
+    user = JSON.parse(localStorage.getItem(USER_KEY) || "{}");
+  } catch {
+    localStorage.removeItem(USER_KEY);
+  }
+  showDashboard(user);
+  Promise.all([loadAlunos(), loadCursos(), loadMatriculas()]);
+} else {
+  showAuth();
+}

@@ -4,12 +4,65 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#f4f7fb">
-  <title>Gestão Escolar</title>
+  <meta name="description" content="Acesse com segurança o painel de gestão escolar.">
+  <title>Acesso · Gestão Escolar</title>
   <link rel="stylesheet" href="style.css">
   <script src="script.js" defer></script>
 </head>
 <body>
-  <div class="app-shell">
+  <main class="auth-screen" id="auth-screen">
+    <section class="auth-story" aria-label="Gestão Escolar">
+      <a class="brand auth-brand" href="#" aria-label="Gestão Escolar">
+        <span class="brand-mark" aria-hidden="true">GE</span>
+        <span><strong>Gestão Escolar</strong><small>Painel administrativo</small></span>
+      </a>
+      <div class="story-content">
+        <span class="story-kicker"><span class="status-dot" aria-hidden="true"></span> GESTÃO ESCOLAR, MAIS SIMPLES</span>
+        <h1>Um espaço para<br>fazer a educação<br><span>avançar.</span></h1>
+        <p>Gerencie alunos, cursos e matrículas com clareza e segurança em um só lugar.</p>
+        <div class="story-note"><span class="story-note-icon" aria-hidden="true">✦</span><span>Seu trabalho organizado.<br><strong>Seu próximo passo mais perto.</strong></span></div>
+      </div>
+      <p class="story-footer">PLATAFORMA DE GESTÃO ACADÊMICA</p>
+    </section>
+    <section class="auth-panel" aria-labelledby="auth-title">
+      <div class="auth-panel-top">
+        <span class="mobile-brand">Gestão Escolar</span>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Ativar modo escuro" aria-pressed="false"><span aria-hidden="true">☾</span><span class="theme-label">Modo escuro</span></button>
+      </div>
+      <div class="auth-card">
+        <div class="auth-view" id="login-view">
+          <p class="eyebrow">BEM-VINDO DE VOLTA</p>
+          <h2 id="auth-title">Acesse sua conta</h2>
+          <p class="auth-description">Entre com seu e-mail e senha para continuar.</p>
+          <form id="login-form" class="auth-form">
+            <label for="login-email">E-mail</label>
+            <input id="login-email" name="email" type="email" placeholder="voce@escola.com.br" autocomplete="username" required>
+            <div class="label-row"><label for="login-password">Senha</label><button class="text-button" type="button" data-show-forgot>Esqueceu a senha?</button></div>
+            <input id="login-password" name="senha" type="password" placeholder="Digite sua senha" autocomplete="current-password" required>
+            <button class="button button-primary auth-submit" type="submit"><span>Entrar no painel</span><span aria-hidden="true">→</span></button>
+          </form>
+          <p class="auth-feedback" id="login-feedback" aria-live="polite" role="status"></p>
+          <div class="secure-note"><span aria-hidden="true">⌑</span> Acesso protegido com autenticação segura</div>
+        </div>
+        <div class="auth-view" id="forgot-view" hidden>
+          <button class="back-link" type="button" data-show-login><span aria-hidden="true">←</span> Voltar ao acesso</button>
+          <p class="eyebrow">RECUPERAÇÃO DE ACESSO</p>
+          <h2>Vamos recuperar sua senha.</h2>
+          <p class="auth-description">Informe o e-mail cadastrado. Se ele existir, enviaremos um link para você criar uma nova senha.</p>
+          <form id="forgot-form" class="auth-form">
+            <label for="forgot-email">E-mail</label>
+            <input id="forgot-email" name="email" type="email" placeholder="voce@escola.com.br" autocomplete="email" required>
+            <button class="button button-primary auth-submit" type="submit"><span>Enviar link de recuperação</span><span aria-hidden="true">→</span></button>
+          </form>
+          <p class="auth-feedback" id="forgot-feedback" aria-live="polite" role="status"></p>
+          <div class="secure-note"><span aria-hidden="true">⌑</span> O link de recuperação é válido por 1 hora</div>
+        </div>
+      </div>
+      <p class="auth-copyright">© <span id="current-year"></span> Gestão Escolar · Acesso administrativo</p>
+    </section>
+  </main>
+
+  <div class="app-shell" id="app-shell" hidden>
     <aside class="sidebar">
       <a class="brand" href="#" aria-label="Gestão Escolar, início">
         <span class="brand-mark" aria-hidden="true">GE</span>
@@ -41,7 +94,11 @@
           <p class="eyebrow">ADMINISTRAÇÃO</p>
           <h1 id="page-title">Alunos</h1>
         </div>
-        <span class="topbar-badge"><span class="status-dot" aria-hidden="true"></span> Painel de gestão</span>
+        <div class="topbar-actions">
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Ativar modo escuro" aria-pressed="false"><span aria-hidden="true">☾</span><span class="theme-label">Modo escuro</span></button>
+          <span class="topbar-badge"><span class="status-dot" aria-hidden="true"></span><span id="current-user">Painel de gestão</span></span>
+          <button class="button button-secondary logout-button" id="logout-button" type="button">Sair</button>
+        </div>
       </header>
 
       <section class="page-section active" id="section-alunos" aria-labelledby="page-title">
