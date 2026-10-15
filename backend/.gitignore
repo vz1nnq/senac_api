@@ -1,2 +1,4 @@
 .env
 node_modules/
+gerarHash.js
+testarEmail.js
